@@ -1,0 +1,51 @@
+<resources>
+    <string name="app_name">Gourtto</string>
+    <string name="title_activity_main">MainActivity</string>
+
+    <!-- SearchiScreenFragment -->
+    <string name="search_title">お店を探す</string>
+    <string name="search_result">検索結果</string>
+    <string name="search_tooltip">地名・施設名・キーワードを入力</string>
+    <string name="search_subtitle1">場所を指定</string>
+    <string name="search_subtitle2">条件を絞って検索</string>
+    <string name="search">検索</string>
+    <string name="hotpapper_credit">【画像提供：ホットペッパー グルメ】</string>
+
+    <!-- Search Params -->
+    <string name="param1_title1">検索範囲</string>
+    <string name="param1_option1">300m</string>
+    <string name="param1_option2">500m</string>
+    <string name="param1_option3">1km</string>
+    <string name="param1_option4">2km</string>
+    <string name="param1_option5">3km</string>
+    <string name="param2_title1">ジャンルを選択</string>
+
+    <!-- layout/recycler_item.xml -->
+    <string name="shop_catch">お店キャッチ</string>
+    <string name="shop_name">店名</string>
+    <string name="shop_access">アクセス</string>
+    <string name="shop_budget">予算</string>
+    <string name="shop_open">営業時間</string>
+
+    <!-- SearchResults -->
+    <string name="result_not_found">条件に一致するお店は見つかりませんでした</string>
+    <string name="hungry">(´º﹃º｀)</string>
+    <string name="search_result_counter">%1$d 件のお店が見つかりました</string>
+
+    <!-- Preference Titles -->
+    <string name="messages_header">Messages</string>
+    <string name="sync_header">Sync</string>
+
+    <!-- Messages Preferences -->
+    <string name="signature_title">Your signature</string>
+    <string name="reply_title">Default reply action</string>
+
+    <!-- Sync Preferences -->
+    <string name="sync_title">Sync email periodically</string>
+    <string name="attachment_title">Download incoming attachments</string>
+    <string name="attachment_summary_on">Automatically download attachments for incoming emails
+    </string>
+    <string name="attachment_summary_off">Only download attachments when manually requested</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>

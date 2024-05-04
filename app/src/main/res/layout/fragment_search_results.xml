@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:nestedScrollingEnabled="true"
+    tools:context=".SearchResultsFragment">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/result_not_found_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/result_not_found"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:autoSizeTextType="uniform"
+            android:gravity="center_horizontal"
+            android:text="@string/result_not_found"
+            android:textColor="@color/darker_gray_trans"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.419" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/hungry_face"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/hungry"
+            android:textColor="@color/darker_gray_trans"
+            android:textSize="25sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/result_not_found"
+            app:layout_constraintVertical_bias="0.034" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/shop_list_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:requiresFadingEdge="vertical"
+        android:fadingEdgeLength="5dp">
+    </androidx.recyclerview.widget.RecyclerView>
+
+    <ProgressBar
+        android:id="@+id/loading_more"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@color/transparent"
+        android:indeterminate="true"
+        android:indeterminateTint="@color/dark_orange"
+        android:indeterminateTintMode="src_in"
+        android:visibility="gone" />
+
+</FrameLayout>

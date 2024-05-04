@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginVertical="5dp"
+    android:elevation="1dp"
+    android:outlineProvider="bounds"
+    android:clipChildren="false">
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/linearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginStart="3dp"
+        android:layout_marginTop="3dp"
+        android:layout_marginEnd="3dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/shop_main_image1"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="5dp"
+            android:layout_weight="1"
+            android:elevation="1dp"
+            app:srcCompat="@drawable/restaurant_fill0_wght400_grad0_opsz24" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/shop_main_image2"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:elevation="1dp"
+            app:srcCompat="@drawable/restaurant_fill0_wght400_grad0_opsz24" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/shop_main_image3"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:elevation="1dp"
+            app:srcCompat="@drawable/restaurant_fill0_wght400_grad0_opsz24" />
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="3dp"
+        android:layout_marginEnd="3dp"
+        android:layout_marginBottom="2dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout">
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:id="@+id/linearLayoutCompat2"
+            android:layout_width="0dp"
+            android:layout_height="34dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/shop_catch_icon"
+                android:layout_width="18dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:paddingVertical="2dp"
+                app:srcCompat="@drawable/mood_fill0_wght400_grad0_opsz24" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/shop_catch"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:autoSizeTextType="uniform"
+                android:gravity="center_vertical"
+                android:text="@string/shop_catch"
+                android:textColor="@color/black"
+                app:autoSizeMaxTextSize="12dp"
+                app:autoSizeMinTextSize="10dp"
+                app:autoSizeTextType="uniform" />
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/constraintLayout"
+            android:layout_width="0dp"
+            android:layout_height="35dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayoutCompat2">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/shop_name"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:gravity="center_vertical"
+                android:text="@string/shop_name"
+                android:textColor="@color/dark_orange"
+                app:autoSizeMaxTextSize="20dp"
+                app:autoSizeMinTextSize="10dp"
+                app:autoSizeTextType="uniform"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/book_mark"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/show_map"
+                android:layout_width="35dp"
+                android:layout_height="0dp"
+                android:background="@drawable/explore_fill0_wght400_grad0_opsz24"
+                android:backgroundTint="@color/darker_gray_trans"
+                android:gravity="end"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.0" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/book_mark"
+                android:layout_width="35dp"
+                android:layout_height="0dp"
+                android:background="@drawable/bookmark_add_fill0_wght400_grad0_opsz24"
+                android:backgroundTint="@color/darker_gray_trans"
+                android:gravity="end"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/show_map"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.0" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:id="@+id/linearLayoutCompat3"
+            android:layout_width="match_parent"
+            android:layout_height="18dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/constraintLayout">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/shop_access_icon"
+                android:layout_width="18dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:paddingVertical="2dp"
+                app:srcCompat="@drawable/directions_walk_fill0_wght400_grad0_opsz24" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/shop_access"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:autoSizeTextType="uniform"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:text="@string/shop_access"
+                android:textColor="@color/darker_gray_trans"
+                app:autoSizeMaxTextSize="12dp"
+                app:autoSizeMinTextSize="10dp"
+                app:autoSizeTextType="uniform" />
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:id="@+id/linearLayoutCompat4"
+            android:layout_width="match_parent"
+            android:layout_height="18dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayoutCompat3">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/shop_budget_icon"
+                android:layout_width="18dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:paddingVertical="2dp"
+                app:srcCompat="@drawable/currency_yen_fill0_wght400_grad0_opsz24" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/shop_budget"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:autoSizeTextType="uniform"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:text="@string/shop_budget"
+                android:textColor="@color/darker_gray_trans"
+                app:autoSizeMaxTextSize="12dp"
+                app:autoSizeMinTextSize="10dp"
+                app:autoSizeTextType="uniform" />
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="18dp"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayoutCompat4">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/shop_open_icon"
+                android:layout_width="18dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:paddingVertical="2dp"
+                app:srcCompat="@drawable/storefront_fill0_wght400_grad0_opsz24" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/shop_open"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:autoSizeTextType="uniform"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:text="@string/shop_open"
+                android:textColor="@color/darker_gray_trans"
+                app:autoSizeMaxTextSize="12dp"
+                app:autoSizeMinTextSize="10dp"
+                app:autoSizeTextType="uniform" />
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
