@@ -9,10 +9,12 @@
     <color name="white">#FFFFFFFF</color>
     <color name="orange">#FFDD5525</color>
     <color name="transparent">#00000000</color>
-    <color name="transgray">#FA646464</color>
+    <color name="midium_gray">#FA646464</color>
     <color name="deepgray">#FA595959</color>
     <color name="light_orange">#FFE3A857</color>
     <color name="dark_orange">#FFCB410B</color>
     <color name="darker_gray_trans">#F4AAAAAA</color>
     <color name="gray_trans">#D0C2C5CC</color>
+    <color name="blue">#FF0000FF</color>
+    <color name="green">#FF007D69</color>
 </resources>

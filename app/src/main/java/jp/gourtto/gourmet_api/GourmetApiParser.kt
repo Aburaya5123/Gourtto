@@ -1,25 +1,28 @@
-package jp.gourtto.gourmetapi
+package jp.gourtto.gourmet_api
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 
 /**
- * ApiのレスポンスをパースするためのDataClass
- *   ジャンルマスタapi -> GourmetGenre
- *   グルメサーチapi -> Gourmet
+ * hotpepper Apiのレスポンスをパースする際に使用するDataClass
+ *   [GourmetGenre] -> ジャンルマスタapi
+ *   [Gourmet] -> グルメサーチapi
  */
 
+// グルメサーチapi <root>
 @Serializable
 data class Gourmet(
     val results: GourmetBody
 )
 
+// ジャンルマスタapi <root>
 @Serializable
 data class GourmetGenre(
     val results: GourmetGenreBody
 )
 
+// ジャンルマスタapi
 @Serializable
 data class GourmetGenreBody(
     @SerialName(value = "api_version")
@@ -33,15 +36,14 @@ data class GourmetGenreBody(
     val genre: List<Genre>?
 )
 
-/**
- * ジャンル情報(ジャンルマスタapi)
- */
+// ジャンルマスタapi - ジャンル
 @Serializable
 data class Genre(
     val code: String, // ジャンルコード
     val name: String // ジャンル名
 )
 
+// グルメサーチapi
 @Serializable
 data class GourmetBody(
     @SerialName(value = "api_version")
@@ -55,6 +57,7 @@ data class GourmetBody(
     val shop: List<Shop>?
 )
 
+// グルメサーチapi - 店舗情報
 @Serializable
 data class Shop(
     val id: String?, // 店舗ID
@@ -138,18 +141,14 @@ data class Shop(
     val couponUrls: CouponUrls? // クーポン情報
 )
 
-/**
- * エリア情報
- */
+// グルメサーチapi - エリア
 @Serializable
 data class Area(
     val code: String?, // エリアコード
     val name: String? // エリア名
 )
 
-/**
- * ジャンル情報(グルメサーチapi)
- */
+// グルメサーチapi - ジャンル
 @Serializable
 data class MainGenre(
     val code: String?, // ジャンルコード
@@ -157,18 +156,14 @@ data class MainGenre(
     val catch: String? // キャッチ
 )
 
-/**
- * サブジャンル
- */
+// グルメサーチapi - サブジャンル
 @Serializable
 data class SubGenre(
     val code: String?, // ジャンルコード
     val name: String? // ジャンル名
 )
 
-/**
- * 予算情報
- */
+// グルメサーチapi - 予算
 @Serializable
 data class Budget(
     val code: String?, // 予算コード
@@ -176,26 +171,20 @@ data class Budget(
     val average: String? // 平均予算
 )
 
-/**
- * URL
- */
+// グルメサーチapi - URL
 @Serializable
 data class Urls(
     val pc: String?, // PC用URL
 )
 
-/**
- * 写真URL
- */
+// グルメサーチapi - 写真URL
 @Serializable
 data class Photo(
     val pc: PCPhoto?, // PC用写真URL
     val mobile: MobilePhoto? // スマホ用写真URL
 )
 
-/**
- * PC用写真URL
- */
+// グルメサーチapi - PC用写真URL
 @Serializable
 data class PCPhoto(
     val l: String?, // 一覧ページ用写真URL
@@ -203,18 +192,14 @@ data class PCPhoto(
     val s: String? // 店舗詳細ページ用写真URL
 )
 
-/**
- * スマホ用写真URL
- */
+// グルメサーチapi - スマホ用写真URL
 @Serializable
 data class MobilePhoto(
     val l: String?, // 一覧ページ用写真URL
     val s: String? // 店舗詳細ページ用写真URL
 )
 
-/**
- * クーポン情報
- */
+// グルメサーチapi - クーポン
 @Serializable
 data class CouponUrls(
     val pc: String?, // PC用クーポンURL

@@ -6,16 +6,24 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import jp.gourtto.R
-import jp.gourtto.gourmetapi.Shop
+import jp.gourtto.gourmet_api.Shop
 
 
 /**
- * 店舗一覧を表示するSearchResultsFragmentのRecyclerViewのAdapter
- * [ShopListItemHolder]のインスタンスを作成し、[Shop]データと関連付ける
+ * 検索結果画面のRecyclerViewで、生成された子オブジェクトがクリックされた際のリスナー
+ * 該当する店舗の店舗IDを引数として渡す
+ */
+interface RecyclerClickListener{
+    fun onRecyclerObjectClicked(shopId: String)
+}
+
+/**
+ * 検索結果画面のRecyclerViewのAdapter
  * GlideのcontextにはHolderViewを指定
  */
 class ShopListRecyclerViewAdapter(
-    private val searchResult: List<Shop>) :
+    private val searchResult: List<Shop>,
+    private val clickListener: RecyclerClickListener) :
     RecyclerView.Adapter<ShopListItemHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ShopListItemHolder {
@@ -25,25 +33,30 @@ class ShopListRecyclerViewAdapter(
     }
 
     override fun onBindViewHolder(holder: ShopListItemHolder, position: Int) {
+        // Object全体をカバーするonClickListener, 該当店舗のShopIdを返す
+        holder.recyclerObject.setOnClickListener{
+            searchResult[position].id?.let { clickListener.onRecyclerObjectClicked(it) }
+        }
+        // キャッチ
         holder.shopCatchText.text = searchResult[position].catch
             ?.takeIf { it.isNotEmpty() } ?: searchResult[position].shopDetailMemo
             ?.takeIf { it.isNotEmpty() } ?: searchResult[position].otherMemo
             ?.takeIf { it.isNotEmpty() } ?: searchResult[position].genre?.catch
             ?.takeIf { it.isNotEmpty() } ?: searchResult[position].genre?.name
             ?.takeIf { it.isNotEmpty() } ?: "情報なし"
-
+        // 店名
         holder.shopNameText.text = searchResult[position].name
             ?.takeIf { it.isNotEmpty() } ?: "情報なし"
-
+        // アクセス
         holder.shopAccessText.text = searchResult[position].mobileAccess
             ?.takeIf { it.isNotEmpty() } ?: searchResult[position].access
             ?.takeIf { it.isNotEmpty() } ?: searchResult[position].address
             ?.takeIf { it.isNotEmpty() } ?: "情報なし"
-
+        // 予算
         holder.shopBudgetText.text = searchResult[position].budget?.average
             ?.takeIf { it.isNotEmpty() } ?: searchResult[position].budget?.name
             ?.takeIf { it.isNotEmpty() } ?: "情報なし"
-
+        // 営業時間
         holder.shopOpenText.text = searchResult[position].open
             ?.takeIf { it.isNotEmpty() } ?: "情報なし"
 

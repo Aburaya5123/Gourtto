@@ -1,14 +1,153 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ShopDetailFragment">
+    android:background="@color/white"
+    tools:context=".fragments.ShopDetailFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/shop_images_view"
+        android:layout_width="0dp"
+        android:layout_height="248dp"
+        android:background="@color/white"
+        android:elevation="1dp"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal"
+        android:outlineProvider="bounds"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-</FrameLayout>
+        <HorizontalScrollView
+            android:id="@+id/shop_images_horizontal_scrollView"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:outlineProvider="bounds">
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:id="@+id/shop_images_holder"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal" />
+
+        </HorizontalScrollView>
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+    <fragment
+        android:id="@+id/streetviewpanorama"
+        class="com.google.android.gms.maps.SupportStreetViewPanoramaFragment"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintBottom_toBottomOf="@+id/shop_images_view"
+        app:layout_constraintEnd_toEndOf="@id/shop_images_view"
+        app:layout_constraintStart_toStartOf="@+id/shop_images_view"
+        app:layout_constraintTop_toTopOf="@+id/shop_images_view" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/streetview_switch"
+        android:layout_width="100dp"
+        android:layout_height="33dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/street_view_switch_on"
+        android:gravity="center_horizontal|center_vertical"
+        android:paddingHorizontal="3dp"
+        android:text="@string/street_view_mode"
+        android:textColor="@color/white"
+        android:textSize="11sp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/shop_images_view"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:visibility="visible" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/shop_name_detail"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="25dp"
+        android:text="@string/shop_name"
+        android:textColor="@color/dark_orange"
+        app:autoSizeMaxTextSize="25dp"
+        app:autoSizeTextType="uniform"
+        app:layout_constraintEnd_toStartOf="@+id/call_number"
+        app:layout_constraintStart_toStartOf="@+id/shop_detail_recycler_view"
+        app:layout_constraintTop_toBottomOf="@+id/shop_images_view" />
+
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/call_number"
+        android:layout_width="49dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="18dp"
+        android:background="@drawable/search_view_background"
+        android:clickable="true"
+        android:elevation="1dp"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="@+id/streetview_switch"
+        app:layout_constraintTop_toBottomOf="@+id/shop_images_view"
+        tools:visibility="visible">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/call_number_icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/call_fill0_wght400_grad0_opsz24"
+            android:backgroundTint="@color/blue" />
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/shop_detail_recycler_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="10dp"
+        android:elevation="1dp"
+        android:outlineProvider="bounds"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/coupon_available" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/coupon_available"
+        android:layout_width="101dp"
+        android:layout_height="33dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/coupon_available"
+        android:elevation="1dp"
+        android:gravity="center_horizontal|center_vertical"
+        android:paddingHorizontal="4dp"
+        android:text="@string/coupon"
+        android:textColor="@color/white"
+        app:autoSizeMinTextSize="10dp"
+        app:autoSizeTextType="uniform"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/shop_name_detail" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/original_site"
+        android:layout_width="130dp"
+        android:layout_height="33dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/hotpepper_link"
+        android:elevation="1dp"
+        android:gravity="center_horizontal|center_vertical"
+        android:paddingHorizontal="4dp"
+        android:text="@string/original_site"
+        android:textColor="@color/dark_orange"
+        app:autoSizeMinTextSize="10dp"
+        app:autoSizeTextType="uniform"
+        app:layout_constraintStart_toEndOf="@+id/coupon_available"
+        app:layout_constraintTop_toBottomOf="@+id/shop_name_detail" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

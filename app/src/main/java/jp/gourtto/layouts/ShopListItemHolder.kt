@@ -8,10 +8,11 @@ import jp.gourtto.R
 
 
 /**
- * RecyclerViewの各行のアイテム参照を保持するクラス
+ * 検索結果画面のRecyclerViewの各行のアイテム参照を保持するクラス
  */
 class ShopListItemHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
+    val recyclerObject: View
     val shopCatchText: TextView
     val shopNameText: TextView
     val shopAccessText: TextView
@@ -20,6 +21,7 @@ class ShopListItemHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     val shopMainImage: ImageView
 
     init {
+        recyclerObject = itemView.findViewById(R.id.recycler_object)
         shopCatchText = itemView.findViewById(R.id.shop_catch)
         shopNameText = itemView.findViewById(R.id.shop_name)
         shopAccessText = itemView.findViewById(R.id.shop_access)

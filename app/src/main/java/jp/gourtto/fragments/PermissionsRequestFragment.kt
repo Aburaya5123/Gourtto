@@ -1,4 +1,4 @@
-package jp.gourtto
+package jp.gourtto.fragments
 
 import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION

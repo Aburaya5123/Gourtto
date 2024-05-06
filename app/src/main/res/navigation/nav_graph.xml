@@ -6,7 +6,7 @@
     app:startDestination="@id/searchScreenFragment">
     <fragment
         android:id="@+id/searchScreenFragment"
-        android:name="jp.gourtto.SearchScreenFragment"
+        android:name="jp.gourtto.fragments.SearchScreenFragment"
         android:label="SearchScreenFragment"
         tools:layout="@layout/fragment_search_screen">
         <action
@@ -15,11 +15,13 @@
     </fragment>
     <fragment
         android:id="@+id/searchResultsFragment"
-        android:name="jp.gourtto.SearchResultsFragment"
+        android:name="jp.gourtto.fragments.SearchResultsFragment"
         android:label="fragment_search_results"
         tools:layout="@layout/fragment_search_results" >
         <action
             android:id="@+id/action_searchResultsFragment_to_searchScreenFragment"
-            app:destination="@id/searchScreenFragment" />
+            app:destination="@id/searchScreenFragment"
+            app:popUpTo="@id/searchScreenFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 </navigation>

@@ -18,8 +18,8 @@ import jp.gourtto.R
 class CustomDialog: DialogFragment(){
 
     /**
-     * ユーザーの選択によって行う分岐処理を実装するインターフェイス
-     * [onNegativeClicked]は、[justNotify]がfalseの時のみ呼び出される
+     * ユーザーの選択によって実行する、分岐処理を実装するインターフェイス
+     * [onNegativeClicked]は、[justNotify]がfalseの場合のみ呼び出される
      */
     interface CustomDialogListener{
         fun onPositiveClicked(dialog: CustomDialog){
@@ -33,12 +33,12 @@ class CustomDialog: DialogFragment(){
     companion object{
         /**
          * シングルトンでインスタンス作成
-         * [justNotify] ユーザーによる選択が不要な、通知のみを行う場合は true
+         * [justNotify] 通知のように、ユーザーによる選択が不要な場合は true
          *                trueの場合は、NegativeButtonが削除される
          * [title] 通知タイトル
          * [body] 通知本文
-         * [positive] 肯定的な選択肢のテキスト
-         * [negative] 否定的な選択肢のテキスト
+         * [positive] 肯定的な選択肢のボタンに表示するテキスト
+         * [negative] 否定的な選択肢のボタンに表示するテキスト
          */
         fun create(justNotify: Boolean, title: String, body: String,
                    positive: String, negative: String, listener: CustomDialogListener?=null): CustomDialog {
@@ -81,7 +81,6 @@ class CustomDialog: DialogFragment(){
             positive = it.getString("Positive", "確認")
             negative = it.getString("Negative", "閉じる")
         }
-
         val posButton: Button
         val negButton: Button
 
@@ -114,7 +113,6 @@ class CustomDialog: DialogFragment(){
             val viewGroup = negButton.parent as ViewGroup
             viewGroup.removeView(negButton)
         }
-
         return dialog
     }
 }

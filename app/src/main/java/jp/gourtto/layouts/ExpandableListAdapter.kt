@@ -15,10 +15,10 @@ import jp.gourtto.R
 
 
 /**
- * SearchScreenFragmentで検索パラメータの入力を行う、ExpandableListViewのAdapter
+ * SearchScreenFragmentで検索パラメータの入力画面を格納する、ExpandableListViewのAdapter
  *
- * [dataList] SearchScreenFragmentの設定項目のタイトルと、その選択肢が格納されたMap
- * 例: Map<'ジャンルを選択', List<'中華', 'イタリアン', '和食'...>>
+ * [dataList] 設定項目(検索範囲,ジャンル...)のタイトルと、その選択肢が格納されたMap
+ *   例: Map<'ジャンルを選択', List<'中華', 'イタリアン', '和食'...>>
  * [groupPosition] -> ExpandableListViewにおける、該当設定項目GroupのIndex(0,1,2...)
  * [childPosition] -> 該当設定項目の親Groupにおける、子としてのIndex(0,1,2...)
  */
@@ -28,9 +28,9 @@ class ExpandableListAdapter(
 ): BaseExpandableListAdapter() {
     /**
      * 選択されている設定項目の値を記録
-     * Map<groupPosition, Map<childPosition, '選択肢の文字列'>>
+     * Map<groupPosition, Map<childPosition, '選択肢の文字列(中華,イタリアン...)'>>
      * ユーザーに選択されるとMapに新規追加され、選択解除されるとMapから削除される
-     * つまり、現在選択されている要素の <childPosition, '選択肢の名称'> のみ格納される
+     * つまり、Group毎に現在選択されている要素の <childPosition, '選択肢の名称'> のみ格納される
      */
     private var currentState: MutableMap<Int,MutableMap<Int,String>> = mutableMapOf()
 
@@ -72,7 +72,7 @@ class ExpandableListAdapter(
     override fun getGroupView(groupPosition: Int, isExpanded: Boolean,
                               convertview: View?, parentView: ViewGroup?): View {
         var convertView = convertview
-        // キーの追加
+        // Groupの追加
         if (currentState.containsKey(groupPosition).not()){
             currentState[groupPosition] = mutableMapOf()
         }
@@ -109,6 +109,7 @@ class ExpandableListAdapter(
         }
         convertView!!.findViewById<Button>(R.id.param_toggle)
             .apply {
+                // 選択状態の更新
                 background = currentState[groupPosition]?.get(childPosition)?.let {
                     switchGenreSelector(true, context)
                 } ?: switchGenreSelector(false, context)

@@ -1,12 +1,9 @@
 package jp.gourtto
 
-
 import android.annotation.SuppressLint
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -14,6 +11,7 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation
+import androidx.navigation.fragment.NavHostFragment
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -27,23 +25,27 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import jp.gourtto.PermissionsRequestFragment.Companion.locationServiceReady
 import jp.gourtto.databinding.ActivityMainBinding
-import jp.gourtto.gourmetapi.GourmetViewModel
+import jp.gourtto.fragments.PermissionsRequestFragment
+import jp.gourtto.fragments.PermissionsRequestFragment.Companion.locationServiceReady
+import jp.gourtto.fragments.ShopDetailFragment
+import jp.gourtto.gourmet_api.DataShareViewModel
 
 
 class MainActivity : AppCompatActivity(), PermissionsRequestFragment.PermissionRequestListener {
 
     companion object{
         private val TAG = PermissionsRequestFragment::class.java.simpleName
-        // 権限の種類を識別するためのTAG
+        // PermissionRequestFragment(位置情報)作成の際に使用するTAG
         private const val LOCATION_PERMISSIONS:String = "LocationPermissions"
+        // ShopDetailFragments作成の際に使用するTAG
+        private const val SHOP_DETAIL_INFO: String = "ShopDetailInfo"
     }
 
     private lateinit var binding: ActivityMainBinding
 
-    private val viewModel: GourmetViewModel by lazy {
-        ViewModelProvider(this)[GourmetViewModel::class.java]
+    private val viewModel: DataShareViewModel by lazy {
+        ViewModelProvider(this)[DataShareViewModel::class.java]
     }
 
     // location API
@@ -70,6 +72,17 @@ class MainActivity : AppCompatActivity(), PermissionsRequestFragment.PermissionR
             if (locationServiceReady(this, this).not()) {
                 createPermissionFragment(LOCATION_PERMISSIONS)
             }
+        }
+        else{
+            /*Navigation.findNavController(this, R.id.nav_host_fragment)
+                .navigate(R.id.searchScreenFragment)
+
+             */
+
+            val navHostFragment =
+                supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment?
+
+            navHostFragment?.navController?.navigate(R.id.searchScreenFragment)
         }
     }
 
@@ -127,6 +140,35 @@ class MainActivity : AppCompatActivity(), PermissionsRequestFragment.PermissionR
                 }
             }
         })
+        /**
+         * [viewModel]にて店舗詳細画面の店舗IDを保持するLiveDataに変動があった際に、
+         *   店舗詳細画面の作成を行う
+         * 画面の破棄は、作成したFragment自ら行う
+         */
+        viewModel.displayedShopId.observe(this, Observer{ id ->
+            id?.takeIf{it.isNotEmpty()}?.let {
+                if (containerFragmentIsAlive(SHOP_DETAIL_INFO).not()){
+                    createShopDetailFragment(it)
+                }
+                else{
+                    viewModel.onFailedToCreateShopDetailFragment()
+                }
+            }
+        })
+    }
+
+    /**
+     * 店舗の詳細情報を表示する[ShopDetailFragment]の作成を行う
+     * TAGとして[SHOP_DETAIL_INFO]を渡す
+     * [id] グルメサーチapiで取得した店舗ID
+     */
+    private fun createShopDetailFragment(id: String){
+        supportFragmentManager
+            .beginTransaction()
+            .replace(R.id.fragment_container_view_shop_detail,
+                ShopDetailFragment()
+                , SHOP_DETAIL_INFO)
+            .commit()
     }
 
     /**
@@ -148,34 +190,33 @@ class MainActivity : AppCompatActivity(), PermissionsRequestFragment.PermissionR
 
     /**
      * [PermissionsRequestFragment]の作成
-     * [permissionType]で、Permissionの種類を指定、TAGとして渡す
+     * [tag]で、Permissionの種類を指定
      */
-    private fun createPermissionFragment(permissionType: String){
+    private fun createPermissionFragment(tag: String){
         val permissions: Array<String> =
-            if (permissionType==LOCATION_PERMISSIONS){
+            if (tag==LOCATION_PERMISSIONS){
                 PermissionsRequestFragment.LocationPermissions
             }
             else{
                 arrayOf() // 権限を追加する際はここ
             }
-
         supportFragmentManager
             .beginTransaction()
-            .replace(R.id.fragment_container_view,
+            .replace(R.id.fragment_container_view_permissions,
                 PermissionsRequestFragment.create(permissions) // インスタンス作成
-                , permissionType)
+                , tag)
             .commit()
     }
 
     /**
-     * [permissionType]を使用して、Fragmentの生存確認を行う
+     * [tag]を使用して、Fragmentの生存確認を行う
      * [createPermissionFragment]でFragment作成の際に渡したTAGと一致
      * 生存していればtrueを返す
      */
-    private fun containerFragmentIsAlive(permissionType: String): Boolean{
+    private fun containerFragmentIsAlive(tag: String): Boolean{
         return try{
             val thisFragment =
-                supportFragmentManager.findFragmentByTag(permissionType)
+                supportFragmentManager.findFragmentByTag(tag)
             thisFragment != null && thisFragment.isVisible
         } catch(e:Exception){
             Log.e(TAG, e.toString())

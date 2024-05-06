@@ -26,11 +26,20 @@
     <string name="shop_access">アクセス</string>
     <string name="shop_budget">予算</string>
     <string name="shop_open">営業時間</string>
+    <string name="shop_phone">電話番号</string>
 
     <!-- SearchResults -->
     <string name="result_not_found">条件に一致するお店は見つかりませんでした</string>
     <string name="hungry">(´º﹃º｀)</string>
     <string name="search_result_counter">%1$d 件のお店が見つかりました</string>
+
+    <!-- ShopDetail -->
+    <string name="call_number">電話をかける</string>
+    <string name="coupon">クーポンを取得</string>
+    <string name="no_coupon">クーポンなし</string>
+    <string name="original_site">ホットペッパーで見る</string>
+    <string name="street_view_mode">ストリートビュー</string>
+    <string name="image_mode">お店の写真</string>
 
     <!-- Preference Titles -->
     <string name="messages_header">Messages</string>

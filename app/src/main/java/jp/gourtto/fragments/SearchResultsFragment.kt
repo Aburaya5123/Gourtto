@@ -1,6 +1,5 @@
-package jp.gourtto
+package jp.gourtto.fragments
 
-import android.app.Activity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -16,16 +15,18 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import jp.gourtto.R
 import jp.gourtto.databinding.FragmentSearchResultsBinding
-import jp.gourtto.gourmetapi.GourmetViewModel
-import jp.gourtto.gourmetapi.Shop
+import jp.gourtto.gourmet_api.DataShareViewModel
+import jp.gourtto.gourmet_api.Shop
+import jp.gourtto.layouts.RecyclerClickListener
 import jp.gourtto.layouts.ShopListRecyclerViewAdapter
 
 
 /**
- * 検索結果を一覧表示する際のViewの作成を行うFragment
+ * 検索結果の一覧表示画面の作成を行うFragment
  */
-class SearchResultsFragment : Fragment() {
+class SearchResultsFragment : Fragment(), RecyclerClickListener {
 
     companion object{
         // 一度に表示する検索結果の件数
@@ -36,8 +37,8 @@ class SearchResultsFragment : Fragment() {
     private val fragmentSearchResultsBinding
         get() = _fragmentSearchResultsBinding!!
 
-    private val viewModel: GourmetViewModel by lazy {
-        ViewModelProvider(requireActivity())[GourmetViewModel::class.java]
+    private val viewModel: DataShareViewModel by lazy {
+        ViewModelProvider(requireActivity())[DataShareViewModel::class.java]
     }
     // RecyclerViewのインスタンスとAdapter
     private lateinit var recycler: RecyclerView
@@ -47,7 +48,7 @@ class SearchResultsFragment : Fragment() {
 
     /**
      * 全ての検索結果が格納されたList
-     * [RESULTS_PER_PAGE]件毎に分割されている
+     * [RESULTS_PER_PAGE]件毎にListに分割
      */
     private lateinit var searchResults: List<List<Shop>>
 
@@ -80,8 +81,10 @@ class SearchResultsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         backButton = requireActivity().findViewById(R.id.back_to_search_screen)
         // デバイスのBackボタンが押された際のコールバックを設定
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
-            onBackToSearchScreen()
+       requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+           onBackToSearchScreen()
+           isEnabled = false
+           requireActivity().onBackPressedDispatcher.onBackPressed()
         }
         addUiListeners()
 
@@ -92,38 +95,38 @@ class SearchResultsFragment : Fragment() {
             onBackToSearchScreen()
             return
         }
-
         // 検索結果の取得に成功した場合、Uiの更新を行う
         if (receiveSearchResult()){
-            setSearchResults()
+            setSearchResults(searchResults)
         }
     }
 
     override fun onDestroyView(){
         super.onDestroyView()
-        removeUiListeners()
+        detachUiListeners()
         _fragmentSearchResultsBinding = null
     }
 
     /**
-     * Backボタンが押された際のコールバックで、SearchScreenFragmentに遷移するように設定
-     * 同時に、[viewModel]の検索結果件数を -1 に変更し、MainActivityのObserverでUI更新を行う
+     * SearchResultFragmentからSearchScreenFragmentに遷移する際の処理
+     * [viewModel]の検索結果件数を -1 に変更し、MainActivityのObserverでUI更新を行う
      */
     private fun onBackToSearchScreen(){
         backButton.visibility = View.INVISIBLE
         viewModel.backToSearchScreen() // 検索件数のLiveDataをリセット
-        Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
-            .navigate(R.id.action_searchResultsFragment_to_searchScreenFragment)
     }
 
     private fun addUiListeners(){
         backButton.visibility = View.VISIBLE
         backButton.setOnClickListener{
             onBackToSearchScreen()
+            Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
+                .navigate(R.id.action_searchResultsFragment_to_searchScreenFragment, null)
         }
     }
 
-    private fun removeUiListeners(){
+    private fun detachUiListeners(){
+        if (::backButton.isInitialized.not()) return
         backButton.setOnClickListener(null)
     }
 
@@ -146,10 +149,10 @@ class SearchResultsFragment : Fragment() {
     }
 
     // RecyclerViewAdapterに検索結果を渡し、Viewの作成を行う
-    private fun setSearchResults(){
-        output = searchResults[currentPage].toMutableList()
+    private fun setSearchResults(results: List<List<Shop>>){
+        output = results[currentPage].toMutableList()
 
-        recyclerAdapter = ShopListRecyclerViewAdapter(output)
+        recyclerAdapter = ShopListRecyclerViewAdapter(output,this)
         recycler = fragmentSearchResultsBinding.shopListRecycler.apply {
             // リスト下までスクロールした際のリスナーを設定
             addOnScrollListener(object: RecyclerView.OnScrollListener() {
@@ -195,5 +198,13 @@ class SearchResultsFragment : Fragment() {
                 progressB.visibility = View.GONE
             }, 1000
         )
+    }
+
+    /**
+     * RecycllerViewのObjectがクリックされた際のリスナー
+     * [shopId] 該当する店舗のID、このIDを基に店舗の詳細情報画面の作成を行う
+     */
+    override fun onRecyclerObjectClicked(shopId: String) {
+        viewModel.createShopDetailFragment(shopId)
     }
 }
