@@ -1,20 +1,25 @@
 package jp.gourtto.layouts
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.google.android.gms.maps.model.LatLng
 import jp.gourtto.R
+import jp.gourtto.fragments.SearchScreenFragment
 import jp.gourtto.gourmet_api.Shop
 
 
 /**
  * 検索結果画面のRecyclerViewで、生成された子オブジェクトがクリックされた際のリスナー
- * 該当する店舗の店舗IDを引数として渡す
  */
 interface RecyclerClickListener{
+    // オブジェクト全体をクリック
     fun onRecyclerObjectClicked(shopId: String)
+    // マップアイコンをクリック
+    fun onMapButtonClicked(instance: Shop)
 }
 
 /**
@@ -26,6 +31,10 @@ class ShopListRecyclerViewAdapter(
     private val clickListener: RecyclerClickListener) :
     RecyclerView.Adapter<ShopListItemHolder>() {
 
+        companion object{
+            private val TAG = ShopListRecyclerViewAdapter::class.java.simpleName
+        }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ShopListItemHolder {
         val inflate: View = LayoutInflater.from(parent.context)
                 .inflate(R.layout.recycler_item, parent, false)
@@ -36,6 +45,10 @@ class ShopListRecyclerViewAdapter(
         // Object全体をカバーするonClickListener, 該当店舗のShopIdを返す
         holder.recyclerObject.setOnClickListener{
             searchResult[position].id?.let { clickListener.onRecyclerObjectClicked(it) }
+        }
+        // MapButton
+        holder.openMapButton.setOnClickListener{
+            clickListener.onMapButtonClicked(searchResult[position])
         }
         // キャッチ
         holder.shopCatchText.text = searchResult[position].catch

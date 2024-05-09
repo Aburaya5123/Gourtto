@@ -5,11 +5,12 @@
     <!-- SearchiScreenFragment -->
     <string name="search_title">お店を探す</string>
     <string name="search_result">検索結果</string>
-    <string name="search_tooltip">地名・施設名・キーワードを入力</string>
+    <string name="search_tooltip">地名・施設名を入力</string>
     <string name="search_subtitle1">場所を指定</string>
     <string name="search_subtitle2">条件を絞って検索</string>
     <string name="search">検索</string>
     <string name="hotpapper_credit">【画像提供：ホットペッパー グルメ】</string>
+    <string name="search_function_unavailable">現在、検索機能はご利用いただけません</string>
 
     <!-- Search Params -->
     <string name="param1_title1">検索範囲</string>
@@ -32,6 +33,7 @@
     <string name="result_not_found">条件に一致するお店は見つかりませんでした</string>
     <string name="hungry">(´º﹃º｀)</string>
     <string name="search_result_counter">%1$d 件のお店が見つかりました</string>
+    <string name="open_map">マップで位置を確認</string>
 
     <!-- ShopDetail -->
     <string name="call_number">電話をかける</string>
@@ -40,6 +42,22 @@
     <string name="original_site">ホットペッパーで見る</string>
     <string name="street_view_mode">ストリートビュー</string>
     <string name="image_mode">お店の写真</string>
+
+    <!-- CustomDialog -->
+    <string name="network_error_title">ネットワークに接続されていません</string>
+    <string name="network_error_body">ネットワークの接続状況をご確認の上、再度お試しください</string>
+    <string name="gourmet_genre_error_title">グルメApiへのリクエストに失敗しました</string>
+    <string name="gourmet_search_error_title">検索に失敗しました</string>
+    <string name="gourmet_search_error_body">時間をおいて再度お試しください</string>
+    <string name="gps_error_title">GPSをオンにしてください</string>
+    <string name="gps_error_body">位置情報サービスを利用するためには、GPSを有効にする必要があります</string>
+    <string name="location_auth_error_title">GPSを利用できません</string>
+    <string name="location_auth_error_body">現在位置を取得するためには、位置情報の使用を許可してください</string>
+    <string name="street_view_error_title">ストリートビューをご利用いただけません</string>
+    <string name="street_view_error_body">ストリートビューの取得に失敗しました</string>
+    <string name="dialog_confirm">確認</string>
+    <string name="open_settings">設定を開く</string>
+    <string name="dialog_close">閉じる</string>
 
     <!-- Preference Titles -->
     <string name="messages_header">Messages</string>

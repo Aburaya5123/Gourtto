@@ -40,6 +40,7 @@
             android:layout_gravity="center_vertical"
             android:layout_weight="1"
             android:elevation="1dp"
+            android:visibility="invisible"
             app:srcCompat="@drawable/restaurant_fill0_wght400_grad0_opsz24" />
 
         <androidx.appcompat.widget.AppCompatImageView
@@ -49,8 +50,45 @@
             android:layout_gravity="center_vertical"
             android:layout_weight="1"
             android:elevation="1dp"
+            android:visibility="invisible"
             app:srcCompat="@drawable/restaurant_fill0_wght400_grad0_opsz24" />
+
     </androidx.appcompat.widget.LinearLayoutCompat>
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/book_mark"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/bookmark_add_fill0_wght400_grad0_opsz24"
+        android:backgroundTint="@color/darker_gray_trans"
+        android:gravity="end"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/open_map"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/explore_fill0_wght400_grad0_opsz24"
+        android:backgroundTint="@color/quantum_cyan700"
+        android:gravity="end"
+        app:layout_constraintEnd_toStartOf="@+id/book_mark"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/open_map_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="11sp"
+        android:text="@string/open_map"
+        android:textColor="@color/midium_gray"
+        app:layout_constraintEnd_toEndOf="@+id/open_map"
+        app:layout_constraintStart_toStartOf="@+id/open_map"
+        app:layout_constraintTop_toBottomOf="@+id/open_map" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="0dp"
@@ -112,33 +150,10 @@
                 app:autoSizeMinTextSize="10dp"
                 app:autoSizeTextType="uniform"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/book_mark"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/show_map"
-                android:layout_width="35dp"
-                android:layout_height="0dp"
-                android:background="@drawable/explore_fill0_wght400_grad0_opsz24"
-                android:backgroundTint="@color/darker_gray_trans"
-                android:gravity="end"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.0" />
-
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/book_mark"
-                android:layout_width="35dp"
-                android:layout_height="0dp"
-                android:background="@drawable/bookmark_add_fill0_wght400_grad0_opsz24"
-                android:backgroundTint="@color/darker_gray_trans"
-                android:gravity="end"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/show_map"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.0" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <androidx.appcompat.widget.LinearLayoutCompat

@@ -83,7 +83,7 @@
             android:layout_marginTop="50dp"
             android:layout_marginBottom="60dp"
             app:navGraph="@navigation/nav_graph"
-            app:defaultNavHost="true"/>
+            app:defaultNavHost="false"/>
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

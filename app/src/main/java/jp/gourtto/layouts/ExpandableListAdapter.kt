@@ -82,9 +82,11 @@ class ExpandableListAdapter(
             val layoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
             convertView = layoutInflater.inflate(R.layout.expandable_view_title, null)
         }
+        // 設定項目のタイトル
         convertView!!.findViewById<TextView>(R.id.param_title).apply {
             text = title
         }
+        // タイトル右の矢印アイコンの設定
         convertView.findViewById<ImageView>(R.id.expandable_list_view_indicator).apply {
             if (isExpanded){
                 setImageResource(R.drawable.expand_less_fill0_wght400_grad0_opsz24)

@@ -1,6 +1,7 @@
 package jp.gourtto.fragments
 
 import android.content.Intent
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.transition.TransitionInflater
@@ -12,10 +13,16 @@ import android.widget.ImageView
 import androidx.activity.addCallback
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 import com.google.android.gms.maps.OnStreetViewPanoramaReadyCallback
 import com.google.android.gms.maps.StreetViewPanorama
 import com.google.android.gms.maps.SupportStreetViewPanoramaFragment
@@ -23,10 +30,11 @@ import jp.gourtto.BuildConfig.PLACE_API_KEY
 import jp.gourtto.R
 import jp.gourtto.databinding.FragmentShopDetailBinding
 import jp.gourtto.google_api.PlaceDetailsRequest
-import jp.gourtto.google_api.PlaceIdRequest
 import jp.gourtto.google_api.StreetViewMetadata
 import jp.gourtto.gourmet_api.DataShareViewModel
+import jp.gourtto.gourmet_api.ErrorType
 import jp.gourtto.gourmet_api.GoogleApiRequestListener
+import jp.gourtto.gourmet_api.GoogleRequestType
 import jp.gourtto.gourmet_api.Shop
 import jp.gourtto.layouts.ArrangeShopInfo
 import jp.gourtto.layouts.CustomDialog
@@ -48,7 +56,7 @@ class ShopDetailFragment : Fragment(), OnStreetViewPanoramaReadyCallback,
         private const val PLACE_DETAILS_REQUEST: String = "https://maps.googleapis.com/maps/api/place/details/"
         // PlacePhotoリクエストに用いるBASE_URL (従量課金)
         private const val PLACE_PHOTO_REQUEST: String = "https://maps.googleapis.com/maps/api/place/photo?"
-        // StreetView画像メタデータリクエストに用いるBASE_URL (リクエストは無料)
+        // StreetViewメタデータリクエストに用いるBASE_URL (リクエストは無料)
         private const val STREET_VIEW_META_REQUEST: String = "https://maps.googleapis.com/maps/api/streetview/metadata?"
 
         // PlacePhotoで取得する画像の最大サイズ
@@ -73,17 +81,28 @@ class ShopDetailFragment : Fragment(), OnStreetViewPanoramaReadyCallback,
     private lateinit var streetViewPanorama: StreetViewPanorama
 
     private lateinit var gourmetShopInfo: Shop // 詳細画面に表示する店舗情報(グルメサーチapiから取得)
-    private lateinit var googlePlaceDetail: PlaceDetailsRequest // 詳細画面に表示する店舗情報(GooglePlaceDetailsから取得)
+    private lateinit var googlePlaceDetails: PlaceDetailsRequest // 詳細画面に表示する店舗情報(GooglePlaceDetailsから取得)
     private lateinit var streetViewPanoramaId: String // 店舗住所のStreetViewを表示するために必要なID
 
     // 店舗詳細画面のRecyclerView
-    private lateinit var recyclerAdapter: ShopDetailRecyclerViewAdapter
-    private lateinit var recycler: RecyclerView
+    private lateinit var recyclerAdapterForDetails: ShopDetailRecyclerViewAdapter
+    private lateinit var recyclerForDetails: RecyclerView
 
     // StreetViewのLocationが一度設定されるとtrue
     private var locationSet: Boolean = false
     // StreetViewFragmentが見える状態であればtrue
-    private var isStreetViewDisplayed: Boolean = false
+    private var streetViewVisibility: Boolean = false
+    /*
+     * Glideでロード済みの画像枚数
+     * カウントが0になった時点でprogressバーを非表示にする
+     */
+    private var loadingPhotoCount: Int = 0
+
+    /**
+     * onResumeで true に設定
+     * fragmentの生成と同時にonBackPressedが呼び出されるとエラーが出るため実装
+     */
+    private var initializationDone: MutableLiveData<Boolean> = MutableLiveData()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,7 +110,6 @@ class ShopDetailFragment : Fragment(), OnStreetViewPanoramaReadyCallback,
         // 店舗情報の取得に失敗した場合は、Fragmentを破棄
         viewModel.getShopDetailInfo()?.let{
             gourmetShopInfo = it
-            Log.e(TAG, gourmetShopInfo.name.toString())
             // 店舗情報を基にGooglePlaceIdを取得
             getPlaceId(gourmetShopInfo)
             // 店舗情報を基にStreetViewMetaリクエストを行い、StreetViewが利用可能であるか確認
@@ -112,6 +130,23 @@ class ShopDetailFragment : Fragment(), OnStreetViewPanoramaReadyCallback,
     ): View {
         _fragmentShopDetailBinding =
             FragmentShopDetailBinding.inflate(inflater, container, false)
+
+        // デバイスのBackボタンが押された際のコールバックを設定
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            isEnabled =false
+            if (initializationDone.value == true){
+                destroyFragment()
+            }
+            else{
+                initializationDone.observe(viewLifecycleOwner, Observer {
+                    var done = false
+                    if (it && done.not()){
+                        done = true
+                        destroyFragment()
+                    }
+                })
+            }
+        }
         return fragmentShopDetailBinding.root
     }
 
@@ -119,20 +154,37 @@ class ShopDetailFragment : Fragment(), OnStreetViewPanoramaReadyCallback,
         super.onViewCreated(view, savedInstanceState)
         // gourmetShopInfoを基に、UI画面を作成
         setUiElements()
-        // デバイスのBackボタンが押された際のコールバックを設定
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+        adduiListeners()
+    }
+
+    override fun onDestroy() {
+        detachUiListeners()
+        _fragmentShopDetailBinding = null
+        super.onDestroy()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        initializationDone.value = true
+    }
+
+    private fun adduiListeners(){
+        fragmentShopDetailBinding.backButton.setOnClickListener{
             destroyFragment()
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        detachUiListeners()
-        _fragmentShopDetailBinding = null
+    private fun detachUiListeners(){
+        if (_fragmentShopDetailBinding == null) return
+        fragmentShopDetailBinding.couponAvailable.setOnClickListener(null)
+        fragmentShopDetailBinding.originalSite.setOnClickListener(null)
+        fragmentShopDetailBinding.streetviewSwitch.setOnClickListener(null)
+        fragmentShopDetailBinding.callNumber.setOnClickListener(null)
+        fragmentShopDetailBinding.backButton.setOnClickListener(null)
     }
 
     /**
-     * 店舗の名前と住所を基に、店舗を一意に識別するGoogleのPlaceIdを取得
+     * 店舗の名前と住所を基に、店舗を識別するGoogleのPlaceIdを取得
      * PlaceIdは、電話番号やレビュー等の情報にアクセスする際に必要となる
      * [info] 詳細画面に表示する店舗情報(グルメサーチapi)
      */
@@ -144,7 +196,7 @@ class ShopDetailFragment : Fragment(), OnStreetViewPanoramaReadyCallback,
                     "&language=ja" +
                     "&input=${info.name} ${info.address}" +
                     "&inputtype=textquery"
-       viewModel.getGooglePlaceId(requestUrl,this)
+       viewModel.getGooglePlaceId(requestUrl,this, requireActivity(), parentFragmentManager)
     }
 
     /**
@@ -157,7 +209,7 @@ class ShopDetailFragment : Fragment(), OnStreetViewPanoramaReadyCallback,
                     "&fields=formatted_phone_number,rating,reviews,photos" +
                     "&language=ja" +
                     "&place_id=${placeId}"
-        viewModel.getGoogleShopDetail(requestUrl, this)
+        viewModel.getGoogleShopDetail(requestUrl, this, requireActivity(), parentFragmentManager)
     }
 
     /**
@@ -168,7 +220,7 @@ class ShopDetailFragment : Fragment(), OnStreetViewPanoramaReadyCallback,
             STREET_VIEW_META_REQUEST +
                     "key=${PLACE_API_KEY}" +
                     "&location=${shopInfo.address} ${shopInfo.name}"
-        viewModel.getStreetViewMeta(requestUrl, this)
+        viewModel.getStreetViewMeta(requestUrl, this, requireActivity(), parentFragmentManager)
     }
 
     // PlaceDetailsのPhotoReferenceを基に、店舗画像のリクエストURLを作成
@@ -193,16 +245,16 @@ class ShopDetailFragment : Fragment(), OnStreetViewPanoramaReadyCallback,
 
     /*
      * StreetViewの初期化が完了した際のコールバック
-     * StreetViewの切り替えButtonの作成
      */
     override fun onStreetViewPanoramaReady(panorama: StreetViewPanorama) {
         streetViewPanorama = panorama
+        // StreetViewの切り替えButtonの作成
         setStreetViewSwitch()
     }
 
     // viewModelが持つ店舗詳細画面の店舗IDを削除し、自らFragmentの破棄を行う
     private fun destroyFragment(){
-        viewModel.onFailedToCreateShopDetailFragment()
+        viewModel.resetDisplayedShopId()
         getParentFragmentManager().beginTransaction().remove(this).commit()
     }
 
@@ -239,33 +291,80 @@ class ShopDetailFragment : Fragment(), OnStreetViewPanoramaReadyCallback,
             }
         }
         // RecyclerViewにその他情報を設定
-        recyclerAdapter = ShopDetailRecyclerViewAdapter(ArrangeShopInfo(gourmetShopInfo).arrange())
-        recycler = fragmentShopDetailBinding.shopDetailRecyclerView.apply {
+        recyclerAdapterForDetails = ShopDetailRecyclerViewAdapter(ArrangeShopInfo(gourmetShopInfo).arrange())
+        recyclerForDetails = fragmentShopDetailBinding.shopDetailRecyclerView.apply {
 
             layoutManager = LinearLayoutManager(context)
-            setAdapter(recyclerAdapter)
+            setAdapter(recyclerAdapterForDetails)
         }
     }
 
     /**
-     * [googlePlaceDetail]のPhotoReferencesを基に、
+     * [googlePlaceDetails]のPhotoReferencesを基に、
      *   店舗に関連する画像を表示する
      * 表示する画像の数については、[MAX_DISPLAY_IMAGE_COUNT]で指定
      */
     private fun setPlacePhotos(placeDetails: PlaceDetailsRequest){
         placeDetails.result?.photos?.let{
-            for ((counter, ref) in it.withIndex()){
-                insertImageView(getPlacePhotoUrl(ref.photoReference))
-                if (counter >= MAX_DISPLAY_IMAGE_COUNT) break
+            // ロードする画像枚数を取得
+            loadingPhotoCount =
+                if (it.size > MAX_DISPLAY_IMAGE_COUNT){
+                    MAX_DISPLAY_IMAGE_COUNT
+                }
+                else{
+                    it.size
+                    }
+            // 0枚の場合はprogressバーを非表示に
+            if (loadingPhotoCount == 0){
+                fragmentShopDetailBinding.progressBarView.visibility = View.GONE
+                return
             }
+            /**
+             * Glideに画像のロードが完了した際のリスナーを渡し、
+             *   完了するたびに[loadingPhotoCount]のカウントを減らす
+             */
+            val loadCompleteListener = object: RequestListener<Drawable>{
+                override fun onLoadFailed(
+                    e: GlideException?,
+                    model: Any?,
+                    target: Target<Drawable>,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    loadingPhotoCount--
+                    // すべての画像のロードが完了
+                    if (loadingPhotoCount == 0 && _fragmentShopDetailBinding!=null)
+                        fragmentShopDetailBinding.progressBarView.visibility = View.GONE
+                    return false
+                }
+
+                override fun onResourceReady(
+                    resource: Drawable,
+                    model: Any,
+                    target: Target<Drawable>?,
+                    dataSource: DataSource,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    loadingPhotoCount--
+                    if (loadingPhotoCount == 0 && _fragmentShopDetailBinding!=null)
+                        fragmentShopDetailBinding.progressBarView.visibility = View.GONE
+                    return false
+                }
+            }
+            for ((counter, ref) in it.withIndex()){
+                insertImageView(getPlacePhotoUrl(ref.photoReference), loadCompleteListener)
+                if (counter >= MAX_DISPLAY_IMAGE_COUNT - 1) break
+            }
+        }?:{
+            fragmentShopDetailBinding.progressBarView.visibility = View.GONE
         }
     }
 
     /**
      * [fragmentShopDetailBinding]の
      *   HorizontalScrollViewに[url]で指定された画像を追加
+     * [mListener] PlacePhotosのロード時に使用
      */
-    private fun insertImageView(url: String){
+    private fun insertImageView(url: String, mListener: RequestListener<Drawable>? = null){
         val image: ImageView = ImageView(context).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, // width
@@ -274,8 +373,17 @@ class ShopDetailFragment : Fragment(), OnStreetViewPanoramaReadyCallback,
                 setPadding(3, 0, 3, 0) // 水平padding
             }
         }
-        Glide.with(requireContext()).load(url).into(image).apply {
-            fragmentShopDetailBinding.shopImagesHolder.addView((image))
+        // PlacePhotos
+        if (mListener != null){
+            Glide.with(requireContext()).load(url).listener(mListener).into(image).apply {
+                fragmentShopDetailBinding.shopImagesHolder.addView((image))
+            }
+        }
+        // hotpepper画像
+        else{
+            Glide.with(requireContext()).load(url).into(image).apply {
+                fragmentShopDetailBinding.shopImagesHolder.addView((image))
+            }
         }
     }
 
@@ -285,7 +393,7 @@ class ShopDetailFragment : Fragment(), OnStreetViewPanoramaReadyCallback,
         startActivity(link)
     }
 
-    // ダイアルButtonの設定
+    // 電話番号が見つかった際に、ダイアルButtonの設定
     private fun setPhoneNumber(phoneNumber: String){
         fragmentShopDetailBinding.callNumber.apply{
             visibility = View.VISIBLE
@@ -311,21 +419,22 @@ class ShopDetailFragment : Fragment(), OnStreetViewPanoramaReadyCallback,
                     visibility = View.GONE
 
                     CustomDialog.create(true,
-                        "エラー",
-                        "ストリートビューの取得に失敗しました",
-                        "閉じる",
-                        "閉じる")
+                        getString(R.string.street_view_error_title),
+                        getString(R.string.street_view_error_body),
+                        getString(R.string.dialog_close),
+                        getString(R.string.dialog_close))
+                        .show(parentFragmentManager, ShopDetailFragment::class.simpleName)
                     return@setOnClickListener
                 }
-                // 位置の指定は課金が発生するため、一度限り
+                // 位置の更新には課金が発生するため、一度限り行う
                 if (locationSet.not()){
                     locationSet = true
                     setStreetViewLocation()
                 }
 
                 // StreetViewが非表示の場合
-                if (isStreetViewDisplayed.not()){
-                    isStreetViewDisplayed = isStreetViewDisplayed.not()
+                if (streetViewVisibility.not()){
+                    streetViewVisibility = streetViewVisibility.not()
                     // StreetViewを表示
                     childFragmentManager.beginTransaction()
                         .show(streetViewPanoramaFragment)
@@ -338,7 +447,7 @@ class ShopDetailFragment : Fragment(), OnStreetViewPanoramaReadyCallback,
                 }
                 // StreetViewが表示されている場合
                 else {
-                    isStreetViewDisplayed = isStreetViewDisplayed.not()
+                    streetViewVisibility = streetViewVisibility.not()
                     // StreetViewを非表示
                     childFragmentManager.beginTransaction()
                         .hide(streetViewPanoramaFragment)
@@ -365,63 +474,109 @@ class ShopDetailFragment : Fragment(), OnStreetViewPanoramaReadyCallback,
         streetViewPanorama.setPosition(streetViewPanoramaId)
     }
 
-    // UIリスナーの破棄
-    private fun detachUiListeners(){
-        if (_fragmentShopDetailBinding == null) return
-        fragmentShopDetailBinding.couponAvailable.setOnClickListener(null)
+    /**
+     * GoogleApiのSuccessListener
+     */
+    override fun onGoogleRequestSucceed(
+        type: GoogleRequestType,
+        placeId: String?,
+        placeDetail: PlaceDetailsRequest?,
+        streetViewMeta: StreetViewMetadata?
+    ) {
+        when(type){
+            GoogleRequestType.PLACE_ID_REQUEST ->
+                onPlacesIdRequestSucceed(placeId)
+            GoogleRequestType.PLACE_DETAIL_REQUEST ->
+                onPlacesDetailsRequestSucceed(placeDetail)
+            GoogleRequestType.STREET_VIEW_META_REQUEST ->
+                onStreetViewMetaRequestSucceed(streetViewMeta)
+        }
+    }
+
+    /**
+     * GoogleApiのFailureListener
+     */
+    override fun onGoogleRequestFailed(
+        type: GoogleRequestType,
+        errorType: ErrorType,
+        error: String
+    ) {
+        when(type){
+            GoogleRequestType.PLACE_ID_REQUEST ->
+                onPlacesIdRequestFailed(errorType, error)
+            GoogleRequestType.PLACE_DETAIL_REQUEST ->
+                onPlacesDetailsRequestFailed(errorType, error)
+            GoogleRequestType.STREET_VIEW_META_REQUEST ->
+                onStreetViewMetaRequestFailed(errorType, error)
+        }
     }
 
     /**
      * [getPlaceId]のリクエストに成功
      * 取得した[placeId]を元に、PlaceDetailsリクエストを行う
      */
-    override fun onRequestSucceed(placeId: String) {
-        getGoogleShopDetail(placeId)
-    }
-
-    /**
-     * [getPlaceId]のリクエストに失敗
-     * Googleの情報は使用せずに、hotpepperApiの情報だけで画面設定を行う
-     */
-    override fun onRequestFailed(error: String, data: PlaceIdRequest?) {
-        Log.e(TAG, error)
+    private fun onPlacesIdRequestSucceed(placeId: String?) {
+        placeId?.let{
+            getGoogleShopDetail(it)
+        }
     }
 
     /**
      * [getGoogleShopDetail]リクエストに成功し、店舗の詳細情報の取得に成功
      * 情報を基に、ストリートビューの設定, UI画面の更新を行う
      */
-    override fun onRequestSucceed(data: PlaceDetailsRequest) {
-        googlePlaceDetail = data
-        setPlacePhotos(googlePlaceDetail)
+    private fun onPlacesDetailsRequestSucceed(data: PlaceDetailsRequest?) {
+        data?.let{detailData ->
+            googlePlaceDetails = detailData
+            setPlacePhotos(googlePlaceDetails)
 
-        // 電話番号を持っていれば、ダイアルButtonの設定を行う
-        googlePlaceDetail.result?.formattedPhoneNumber?.takeIf { it.isNotEmpty() }
-            ?.let{ setPhoneNumber(it) }
-    }
-
-    /**
-     * [getGoogleShopDetail]リクエストに失敗
-     * Googleの情報は使用せずに、hotpepperApiの情報だけで画面設定を行う
-     */
-    override fun onRequestFailed(error: String, data: PlaceDetailsRequest?) {
-        Log.e(TAG, error)
+            // 電話番号を持っていれば、ダイアルButtonの設定を行う
+            googlePlaceDetails.result?.formattedPhoneNumber?.takeIf { it.isNotEmpty() }
+                ?.let{ setPhoneNumber(it) }
+        }
     }
 
     /**
      * [getStreetViewMeta]リクエストに成功したので、panoIdを変数に格納
      *   StreetViewFragmentの初期化を行う
      */
-    override fun onRequestSucceed(data: StreetViewMetadata) {
-        data.panoId?.let { streetViewPanoramaId = it }
-        initStreetViewPanorama()
+   private fun onStreetViewMetaRequestSucceed(data: StreetViewMetadata?) {
+       data?.let{metaData ->
+           metaData.panoId?.let { streetViewPanoramaId = it }
+           initStreetViewPanorama()
+       }
+    }
+
+    /**
+     * [getPlaceId]のリクエストに失敗
+     * Googleの情報は使用せずに、hotpepperApiの情報だけで画面設定を行う
+     */
+    private fun onPlacesIdRequestFailed(errorType: ErrorType, error: String) {
+        Log.e(TAG, error)
+        if (_fragmentShopDetailBinding!=null){
+            fragmentShopDetailBinding.progressBarView.visibility = View.GONE
+        }
+    }
+
+    /**
+     * [getGoogleShopDetail]リクエストに失敗
+     * Googleの情報は使用せずに、hotpepperApiの情報だけで画面設定を行う
+     */
+    private fun onPlacesDetailsRequestFailed(errorType: ErrorType, error: String) {
+        Log.e(TAG, error)
+        if (_fragmentShopDetailBinding!=null){
+            fragmentShopDetailBinding.progressBarView.visibility = View.GONE
+        }
     }
 
     /**
      * [getStreetViewMeta]リクエストに失敗
      * StreetViewのMetaデータの取得に失敗したので、StreetView表示Buttonを無効化する
      */
-    override fun onRequestFailed(error: String, data: StreetViewMetadata?) {
-        fragmentShopDetailBinding.streetviewSwitch.visibility = View.GONE
+    private fun onStreetViewMetaRequestFailed(errorType: ErrorType, error: String) {
+        Log.e(TAG, error)
+        if (_fragmentShopDetailBinding!=null){
+            fragmentShopDetailBinding.streetviewSwitch.visibility = View.GONE
+        }
     }
 }

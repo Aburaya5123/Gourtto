@@ -1,6 +1,7 @@
 package jp.gourtto.layouts
 
 import android.app.Dialog
+import android.content.DialogInterface
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -8,12 +9,22 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import jp.gourtto.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
 
 
 /**
  * カスタムダイアログを作成するクラス
- * インスタンスはシングルトンで作成し、その際にBundleで引数を渡す
+ * インスタンス作成後、[waitAsync]を呼ぶことで、ユーザーがダイアログの操作を行うまで待つことが可能
+ *
+ * キャンセル操作は無効化済み
  */
 class CustomDialog: DialogFragment(){
 
@@ -32,7 +43,7 @@ class CustomDialog: DialogFragment(){
 
     companion object{
         /**
-         * シングルトンでインスタンス作成
+         * インスタンス作成
          * [justNotify] 通知のように、ユーザーによる選択が不要な場合は true
          *                trueの場合は、NegativeButtonが削除される
          * [title] 通知タイトル
@@ -64,12 +75,23 @@ class CustomDialog: DialogFragment(){
     }
 
     private var listener: CustomDialogListener? = null
-
+    /*
+     * trueの場合は、negativeButtonを削除
+     * 目的がユーザーに通知を行う場合に使用
+     */
     private var justNotify: Boolean = false
     private lateinit var title: String
     private lateinit var body: String
     private lateinit var positive: String
     private lateinit var negative: String
+    /*
+     * ダイアログに対して操作があった際に値が入力される
+     *  positive -> 1
+     *  negative -> 0
+     *  dismiss -> -1
+     */
+    private val _buttonClickLiveData = MutableLiveData<Int>()
+    private val buttonClickLiveData: LiveData<Int> = _buttonClickLiveData
 
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -100,10 +122,12 @@ class CustomDialog: DialogFragment(){
         // Buttonにリスナーを設定
         posButton.setOnClickListener {
             listener?.onPositiveClicked(this)
+            _buttonClickLiveData.value = 1
         }
         if (justNotify.not()){
             negButton.setOnClickListener {
                 listener?.onNegativeClicked(this)
+                _buttonClickLiveData.value = 0
             }
         }
         /**
@@ -113,6 +137,43 @@ class CustomDialog: DialogFragment(){
             val viewGroup = negButton.parent as ViewGroup
             viewGroup.removeView(negButton)
         }
+        /**
+         * キャンセル操作の無効化
+         */
+        this.isCancelable = false
+
         return dialog
+    }
+
+    // ボタン操作以外での終了
+    override fun onCancel(dialog: DialogInterface) {
+        _buttonClickLiveData.value = -1
+        super.onCancel(dialog)
+    }
+
+    /**
+     * [buttonClickLiveData]の値が変動(ダイアログに対するアクションを取得)するまで待機
+     */
+    suspend fun waitAsync(fragmentManager: FragmentManager, tag:String): Int{
+        show(fragmentManager, tag)
+        return buttonClickLiveData.await()
+    }
+
+    // LiveDataの値が変更されるまで待機
+    private suspend fun LiveData<Int>.await(): Int {
+        return withContext(Dispatchers.Main.immediate) {
+            suspendCancellableCoroutine { continuation ->
+                val observer = object : Observer<Int> {
+                    override fun onChanged(value: Int) {
+                        removeObserver(this)
+                        continuation.resume(value)
+                    }
+                }
+                observeForever(observer)
+                continuation.invokeOnCancellation {
+                    removeObserver(observer)
+                }
+            }
+        }
     }
 }

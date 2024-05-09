@@ -31,20 +31,22 @@ class SearchResultsFragment : Fragment(), RecyclerClickListener {
     companion object{
         // 一度に表示する検索結果の件数
         private const val RESULTS_PER_PAGE: Int = 7
+        private val TAG = SearchResultsFragment::class.java.simpleName
+    }
+
+    private val viewModel: DataShareViewModel by lazy {
+        ViewModelProvider(requireActivity())[DataShareViewModel::class.java]
     }
 
     private var _fragmentSearchResultsBinding: FragmentSearchResultsBinding? = null
     private val fragmentSearchResultsBinding
         get() = _fragmentSearchResultsBinding!!
 
-    private val viewModel: DataShareViewModel by lazy {
-        ViewModelProvider(requireActivity())[DataShareViewModel::class.java]
-    }
-    // RecyclerViewのインスタンスとAdapter
-    private lateinit var recycler: RecyclerView
-    private lateinit var recyclerAdapter: ShopListRecyclerViewAdapter
+    // 検索結果画面のRecyclerViewのインスタンスとAdapter
+    private lateinit var searchResultsRecycler: RecyclerView
+    private lateinit var searchResultsRecyclerAdapter: ShopListRecyclerViewAdapter
     // SearchScreenFragmentに戻るボタン
-    private lateinit var backButton: Button
+    private lateinit var backToSearchScreenFragmentButton: Button
 
     /**
      * 全ての検索結果が格納されたList
@@ -53,11 +55,11 @@ class SearchResultsFragment : Fragment(), RecyclerClickListener {
     private lateinit var searchResults: List<List<Shop>>
 
     // RecyclerViewで出力するデータのみをここに格納
-    private lateinit var output: MutableList<Shop>
+    private lateinit var displayedResults: MutableList<Shop>
 
     private var currentPage: Int = 0 // 現在のページ数
-    private var pageNum: Int = 0 // 合計のページ数 -> searchResults.sizeと一致
-    private var loading: Boolean = false // 検索結果の追加ロード中であればtrue
+    private var totalPageNum: Int = 0 // 合計のページ数 == searchResults.size
+    private var additionalLoading: Boolean = false // 検索結果の追加ロード中であればtrue
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,15 +81,12 @@ class SearchResultsFragment : Fragment(), RecyclerClickListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        backButton = requireActivity().findViewById(R.id.back_to_search_screen)
         // デバイスのBackボタンが押された際のコールバックを設定
-       requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
-           onBackToSearchScreen()
-           isEnabled = false
-           requireActivity().onBackPressedDispatcher.onBackPressed()
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            isEnabled = false
+            onBackToSearchScreen()
         }
         addUiListeners()
-
         /**
          * アプリの復帰時に、viewModelが検索結果のデータを保持していなければ、SearchScreenFragmentに戻る
          */
@@ -102,9 +101,9 @@ class SearchResultsFragment : Fragment(), RecyclerClickListener {
     }
 
     override fun onDestroyView(){
-        super.onDestroyView()
         detachUiListeners()
         _fragmentSearchResultsBinding = null
+        super.onDestroyView()
     }
 
     /**
@@ -112,22 +111,23 @@ class SearchResultsFragment : Fragment(), RecyclerClickListener {
      * [viewModel]の検索結果件数を -1 に変更し、MainActivityのObserverでUI更新を行う
      */
     private fun onBackToSearchScreen(){
-        backButton.visibility = View.INVISIBLE
-        viewModel.backToSearchScreen() // 検索件数のLiveDataをリセット
+        backToSearchScreenFragmentButton.visibility = View.INVISIBLE
+        viewModel.onBackToSearchScreen() // 検索件数のLiveDataをリセット
+        Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
+            .navigate(R.id.action_searchResultsFragment_to_searchScreenFragment, null)
     }
 
     private fun addUiListeners(){
-        backButton.visibility = View.VISIBLE
-        backButton.setOnClickListener{
+        backToSearchScreenFragmentButton = requireActivity().findViewById(R.id.back_to_search_screen)
+        backToSearchScreenFragmentButton.visibility = View.VISIBLE
+        backToSearchScreenFragmentButton.setOnClickListener{
             onBackToSearchScreen()
-            Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
-                .navigate(R.id.action_searchResultsFragment_to_searchScreenFragment, null)
         }
     }
 
     private fun detachUiListeners(){
-        if (::backButton.isInitialized.not()) return
-        backButton.setOnClickListener(null)
+        if (::backToSearchScreenFragmentButton.isInitialized.not()) return
+        backToSearchScreenFragmentButton.setOnClickListener(null)
     }
 
     /*
@@ -138,7 +138,7 @@ class SearchResultsFragment : Fragment(), RecyclerClickListener {
         viewModel.getPagedShopList(RESULTS_PER_PAGE)?.let{
             // 検索結果が見つかったので、RecyclerViewを作成
             searchResults = it
-            pageNum = searchResults.size
+            totalPageNum = searchResults.size
             resultMatched()
             return true
         } ?:{
@@ -150,22 +150,23 @@ class SearchResultsFragment : Fragment(), RecyclerClickListener {
 
     // RecyclerViewAdapterに検索結果を渡し、Viewの作成を行う
     private fun setSearchResults(results: List<List<Shop>>){
-        output = results[currentPage].toMutableList()
+        displayedResults = results[currentPage].toMutableList()
 
-        recyclerAdapter = ShopListRecyclerViewAdapter(output,this)
-        recycler = fragmentSearchResultsBinding.shopListRecycler.apply {
+        searchResultsRecyclerAdapter = ShopListRecyclerViewAdapter(displayedResults,this)
+        searchResultsRecycler = fragmentSearchResultsBinding.shopListRecycler.apply {
             // リスト下までスクロールした際のリスナーを設定
             addOnScrollListener(object: RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
-                    if (loading.not() && recyclerView.canScrollVertically(1).not()
-                            && pageNum > currentPage + 1){
+                    // 現在ロード中でない && スクロール可能である && 最後のページでない
+                    if (additionalLoading.not() && recyclerView.canScrollVertically(1).not()
+                            && totalPageNum > currentPage + 1){
                         loadMore()
                     }
                 }
             })
             layoutManager = LinearLayoutManager(context)
-            setAdapter(recyclerAdapter)
+            setAdapter(searchResultsRecyclerAdapter)
         }
     }
 
@@ -181,30 +182,38 @@ class SearchResultsFragment : Fragment(), RecyclerClickListener {
 
     /**
      * 画面下までスクロールしたとき、追加でViewの作成を行う
-     * [output]に要素を追加し、Adapterの .notifyItemInserted()を呼ぶことで、
-     *   RecyclerViewの更新が自動で行われる
+     * [displayedResults]に要素を追加し、Adapterの .notifyItemInserted()を呼びだす
      */
     private fun loadMore(){
-        loading = true
+        additionalLoading = true // 現在ロード中
         val progressB: ProgressBar = fragmentSearchResultsBinding.loadingMore
         progressB.visibility = View.VISIBLE
-
+        // ロードアニメーションを表示させるための遅延処理
         Handler((Looper.getMainLooper())).postDelayed(
             {
-                val lastPosition = output.size
-                output.addAll(searchResults[++currentPage])
-                recyclerAdapter.notifyItemInserted(lastPosition)
-                loading = false
+                val lastPosition = displayedResults.size
+                displayedResults.addAll(searchResults[++currentPage])
+                searchResultsRecyclerAdapter.notifyItemInserted(lastPosition)
+                additionalLoading = false
                 progressB.visibility = View.GONE
             }, 1000
         )
     }
 
     /**
-     * RecycllerViewのObjectがクリックされた際のリスナー
+     * 検索結果一覧の項目がクリックされた際のリスナー
      * [shopId] 該当する店舗のID、このIDを基に店舗の詳細情報画面の作成を行う
      */
     override fun onRecyclerObjectClicked(shopId: String) {
-        viewModel.createShopDetailFragment(shopId)
+        viewModel.onCreateShopDetailFragment(shopId)
+    }
+
+    /**
+     * 検索結果一覧で項目のマップButtonがクリックされた際のリスナー
+     * MainActivityでマップの更新を行う
+     * [instance] 該当する店舗の[Shop]インスタンス
+     */
+    override fun onMapButtonClicked(instance: Shop) {
+        viewModel.onShopMarkButtonClicked(instance)
     }
 }

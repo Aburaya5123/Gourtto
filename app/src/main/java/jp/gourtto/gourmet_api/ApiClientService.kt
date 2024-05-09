@@ -7,9 +7,9 @@ import jp.gourtto.google_api.PlaceIdRequest
 import jp.gourtto.google_api.StreetViewMetadata
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.Retrofit
 import retrofit2.http.GET
-import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.http.QueryMap
 import retrofit2.http.Url
 

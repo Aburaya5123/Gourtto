@@ -20,17 +20,7 @@
         <item name="android:editTextColor">@color/deepgray</item>
         <item name="android:textColorHint">@android:color/darker_gray</item>
     </style>
-<!--
-    <style name="AppBottomSheetDialogTheme"
-        parent="Theme.Design.Light.BottomSheetDialog">
-        <item name="bottomSheetStyle">@style/AppModalStyle</item>
-    </style>
 
-    <style name="AppModalStyle"
-        parent="Widget.Design.BottomSheet.Modal">
-        <item name="android:background">@drawable/bottomsheet_background</item>
-    </style>
-    -->
     <style name="MyAppSearchView" parent="Widget.AppCompat.SearchView" >
         <item name="android:textSize">15sp</item>
         <item name="colorControlActivated">@color/midium_gray</item>
@@ -40,5 +30,15 @@
         <item name="android:button">@drawable/radius_selector_toggle_button</item>
         <item name="android:buttonTint">@android:color/white</item>
         <item name="android:buttonTintMode">multiply</item>
+    </style>
+
+    <!-- SplashScreen Theme-->
+    <style name="AppTheme.SplashScreen" parent="Theme.SplashScreen">
+
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ramen_dining_24dp_fill0_wght400_grad0_opsz24</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/orange</item>
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <item name="windowSplashScreenAnimationDuration">1000</item>
+        <item name="postSplashScreenTheme">@style/Theme.Gourtto</item>
     </style>
 </resources>

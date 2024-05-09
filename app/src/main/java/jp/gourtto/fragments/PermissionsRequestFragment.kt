@@ -7,12 +7,15 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import jp.gourtto.R
 import jp.gourtto.layouts.CustomDialog
 
 
@@ -23,7 +26,6 @@ class PermissionsRequestFragment : Fragment() {
 
     /**
      * 権限の取得に成功,失敗した際のリスナー
-     * 呼び出し元で実装していない場合、[onAttach]でこのFragmentは破棄される
      */
     interface PermissionRequestListener{
         fun onLocationPermissionGranted()
@@ -34,32 +36,58 @@ class PermissionsRequestFragment : Fragment() {
     companion object {
         /**
          * インスタンスの作成、及び必要な権限の受け取り
-         * [permissionType]は、Manifest.permission の権限名が格納されたArray
+         * [permissionType] Manifest.permission の権限名が格納されたArray
          */
-        fun create(permissionType: Array<String>): PermissionsRequestFragment {
+        fun create(permissionType: Array<String>, listener: PermissionRequestListener)
+        : PermissionsRequestFragment {
             return PermissionsRequestFragment().apply {
                 val bundle = Bundle()
                 bundle.putStringArray("permissionType", permissionType)
                 arguments = bundle
+                this.mListener = listener
+                if (this.mListener == null){
+                    Log.e(TAG, "PermissionRequestListener is not implemented.")
+                }
             }
         }
 
         /**
          * 現在位置の取得に必要な権限を所有している、かつGpsがオンになっていればtrueを返す
          */
-        fun locationServiceReady(context: Context, activity: Activity): Boolean {
+        fun isReadyForLocationServices(context: Context, activity: Activity): Boolean {
             for (permission in LocationPermissions) {
                 if (ContextCompat.checkSelfPermission(context, permission)
                     == PackageManager.PERMISSION_GRANTED
                 ) {
-                    return gpsIsEnabled(activity)
+                    return isGpsEnabled(activity)
+                }
+            }
+            return false
+        }
+
+        /**
+         * ネットワーク接続状況の確認
+         */
+        fun isOnline(activity: Activity): Boolean {
+            val connectionManager =
+                activity.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
+            if (connectionManager != null){
+                val capabilities =
+                    connectionManager.getNetworkCapabilities(connectionManager.activeNetwork)
+                if (capabilities != null) {
+                    return when {
+                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
+                        else -> false
+                    }
                 }
             }
             return false
         }
 
         // Gpsがオンになっていればtrueを返す
-        private fun gpsIsEnabled(activity: Activity): Boolean {
+        fun isGpsEnabled(activity: Activity): Boolean {
             val locationManager = activity
                 .getSystemService(Context.LOCATION_SERVICE) as LocationManager
             return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
@@ -74,58 +102,35 @@ class PermissionsRequestFragment : Fragment() {
         private val TAG = PermissionsRequestFragment::class.java.simpleName
     }
 
-    private var listener: PermissionRequestListener? = null
+    private var mListener: PermissionRequestListener? = null
     private lateinit var requestedPermissions: Array<String>
 
 
-    /**
-     * 呼び出し元が[PermissionRequestListener]を実装しているか確認
-     * 未実装の場合は、Fragmentを破棄
-     */
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        if (context is PermissionRequestListener){
-            listener = context
-        }
-        else{
-            Log.e(TAG, "PermissionRequestListener is not implemented")
-            activity?.supportFragmentManager
-                ?.beginTransaction()
-                ?.remove(this)
-                ?.commit()
-        }
-    }
-
-    /**
-     * リクエストのあった権限の種類によって処理を分岐
-     * [create]でインスタンスを作成した際に、[Bundle]の中にArgumentsを格納
-     */
+    // リクエストのあった権限の種類によって処理を分岐
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
             requestedPermissions = it.getStringArray("permissionType")!!
         }
-        // ここからは、権限の種類によって分岐処理
         if (requestedPermissions.contentEquals(LocationPermissions)){
-            checkLocationService()
+            isReadyForLocationServices()
         }
     }
 
     override fun onDetach() {
+        mListener = null
         super.onDetach()
-        listener = null
     }
 
     /**
-     * [requestedPermissions] の内、一つでも権限を得ることが出来れば
-     *   [granted]=trueとなる
+     * [requestedPermissions] の内、一つでも権限を得ることが出来れば[granted] -> trueとなる
      * 権限の種類によって分岐処理を行う
      */
     private val requestPermissionLauncher =
         registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { permissions ->
-            var granted: Boolean = false
+            var granted = false
 
             for (permission in requestedPermissions) {
                 if (permissions.getOrElse(permission) { false }) {
@@ -136,19 +141,19 @@ class PermissionsRequestFragment : Fragment() {
             // 権限の取得に成功
             if (granted) {
                 if (requestedPermissions.contentEquals(LocationPermissions)) {
-                    gpsIsEnabled() // GPSのオンオフを確認
+                    isGpsEnabled() // GPSのオンオフを確認
                 }
             }
             // 権限の取得に失敗
             else {
                 if (requestedPermissions.contentEquals(LocationPermissions)) {
                     CustomDialog
-                        .create(true, "GPSを利用できません",
-                            "現在位置を取得するためには、位置情報の利用を許可してください",
-                            "確認","")
-                        .show(getParentFragmentManager(), CustomDialog::class.simpleName)
+                        .create(true, getString(R.string.location_auth_error_title),
+                            getString(R.string.location_auth_error_body),
+                            getString(R.string.dialog_confirm),getString(R.string.dialog_confirm))
+                        .show(parentFragmentManager, CustomDialog::class.simpleName)
 
-                    listener?.onLocationPermissionDenied()
+                    mListener?.onLocationPermissionDenied()
                 }
             }
         }
@@ -158,12 +163,12 @@ class PermissionsRequestFragment : Fragment() {
      *   許可を持っていない場合は、確認ダイアログを表示させる
      *   許可を持っている場合は、Gpsがオンであるか確認
      */
-    private fun checkLocationService(){
+    private fun isReadyForLocationServices(){
         for (permission in requestedPermissions) {
             if (ContextCompat.checkSelfPermission(requireContext(), permission)
                 == PackageManager.PERMISSION_GRANTED)
             {
-                gpsIsEnabled()
+                isGpsEnabled()
                 return
             }
         }
@@ -175,27 +180,26 @@ class PermissionsRequestFragment : Fragment() {
 
     /**
      * GPSのオンオフを確認する
-     * GPSがオフの場合、ダイアログを表示し設定画面に誘導する
-     *   設定の変更の有無は確認できないので、[PermissionRequestListener.onLocationPermissionDenied]を返す
-     * GPSがオンの場合、位置情報を利用する準備が整っているので、
-     *   [PermissionRequestListener.onLocationPermissionGranted]を返す
+     *   GPSがオフの場合、ダイアログを表示し設定画面に誘導する
+     *   GPSがオンの場合、位置情報を利用する準備が整っているので、successListenerを呼び出す
      */
-    private fun gpsIsEnabled(){
+    private fun isGpsEnabled(){
         val locationManager = requireActivity()
             .getSystemService(Context.LOCATION_SERVICE) as LocationManager
         // GPS on
         if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            listener?.onLocationPermissionGranted()
+            mListener?.onLocationPermissionGranted()
         }
         // GPS off
         else {
-            // カスタムダイアログの作成
             CustomDialog
-                .create(false, "GPSがオフになっています",
-                    "位置情報サービスを利用するためには、GPSを有効にする必要があります",
-                    "設定を開く","キャンセル",
+                .create(false, getString(R.string.gps_error_title),
+                    getString(R.string.gps_error_body),
+                    getString(R.string.open_settings),
+                    getString(R.string.dialog_close),
                     object: CustomDialog.CustomDialogListener{
                         override fun onPositiveClicked(dialog: CustomDialog) {
+                            // GPSの設定画面を開く
                             startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
                             super.onPositiveClicked(dialog)
                         }
@@ -203,9 +207,9 @@ class PermissionsRequestFragment : Fragment() {
                             super.onPositiveClicked(dialog)
                         }
                     })
-                .show(getParentFragmentManager(), CustomDialog::class.simpleName)
+                .show(parentFragmentManager, CustomDialog::class.simpleName)
 
-            listener?.onLocationPermissionDenied()
+            mListener?.onLocationPermissionDenied()
         }
     }
 }

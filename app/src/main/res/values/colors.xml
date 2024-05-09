@@ -17,4 +17,5 @@
     <color name="gray_trans">#D0C2C5CC</color>
     <color name="blue">#FF0000FF</color>
     <color name="green">#FF007D69</color>
+    <color name="trans_yellow">#77FFAA33</color>
 </resources>

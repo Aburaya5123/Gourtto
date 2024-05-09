@@ -20,8 +20,6 @@
         tools:layout="@layout/fragment_search_results" >
         <action
             android:id="@+id/action_searchResultsFragment_to_searchScreenFragment"
-            app:destination="@id/searchScreenFragment"
-            app:popUpTo="@id/searchScreenFragment"
-            app:popUpToInclusive="true" />
+            app:destination="@id/searchScreenFragment" />
     </fragment>
 </navigation>

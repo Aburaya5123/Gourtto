@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId "jp.gourtto"
-        minSdk 30
+        minSdk 31
         targetSdk 34
         versionCode 1
         versionName "1.0"
@@ -87,4 +87,7 @@ dependencies {
 
     // Place api
     implementation 'com.google.android.libraries.places:places:3.4.0'
+
+    // Splash Screen
+    implementation 'androidx.core:core-splashscreen:1.0.1'
 }

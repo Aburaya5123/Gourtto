@@ -13,8 +13,14 @@ import jp.gourtto.gourmet_api.Shop
  * [Shop]インスタンスの各プロパティを List<name,value> に変換
  */
 class ArrangeShopInfo(private val instance: Shop) {
+
+    /**
+     * RecyclerViewの要素となるデータを格納
+     * [title] Viewの左側タイトル
+     * [body] Viewの右側本文
+     */
     data class ShopInfo(
-        val titile: String,
+        val title: String,
         val body: String?,
     )
     fun arrange(): List<ShopInfo> {
@@ -39,7 +45,6 @@ class ArrangeShopInfo(private val instance: Shop) {
 
         ShopInfo("料金",
             (instance.budget?.average
-            ?.takeIf { it.isNotEmpty() } ?: instance.name
             ?.takeIf { it.isNotEmpty() } ?: "情報なし").apply {
                 instance.budgetMemo?.takeIf { it.isNotEmpty() }.let{
                     this + "\n${it}"
@@ -53,9 +58,56 @@ class ArrangeShopInfo(private val instance: Shop) {
         // 定休日
         ShopInfo("定休日",
             instance.close
-            ?.takeIf { it.isNotEmpty() } ?: "情報なし")
-        )
+            ?.takeIf { it.isNotEmpty() } ?: "情報なし"),
 
+        // 席数
+        ShopInfo("総席数",
+    instance.capacity
+            ?.takeIf { it.isNotEmpty() }?: instance.partyCapacity
+            ?.takeIf { it.isNotEmpty() }?: "情報なし"),
+
+        // 駐車場
+        ShopInfo("駐車場",
+            instance.parking
+                ?.takeIf { it.isNotEmpty() }?: "情報なし"),
+
+        // コース
+        ShopInfo("コース料理",
+            instance.course
+                ?.takeIf { it.isNotEmpty() }?: "情報なし"),
+
+        // 飲み放題
+        ShopInfo("飲み放題",
+            instance.freeDrink
+                ?.takeIf { it.isNotEmpty() }?: "情報なし"),
+
+        // 食べ放題
+        ShopInfo("食べ放題",
+            instance.freeFood
+                ?.takeIf { it.isNotEmpty() }?: "情報なし"),
+
+        // 個室
+        ShopInfo("個室",
+            instance.privateRoom
+                ?.takeIf { it.isNotEmpty() }?: "情報なし"),
+
+        // クレカ
+        ShopInfo("クレジットカード",
+            instance.card
+                ?.takeIf { it.isNotEmpty() }?: "情報なし"),
+
+        // 禁煙席
+        ShopInfo("禁煙席",
+            instance.nonSmoking
+                ?.takeIf { it.isNotEmpty() }?: "情報なし"),
+
+        // バリアフリー
+        ShopInfo("バリアフリー",
+            instance.barrierFree
+                ?.takeIf { it.isNotEmpty() }?: "情報なし"),
+
+        // Margin
+        ShopInfo("",""))
     }
 }
 
@@ -73,7 +125,7 @@ class ShopDetailRecyclerViewAdapter(
     }
 
     override fun onBindViewHolder(holder: ShopDetailItemHolder, position: Int) {
-        holder.rowTitle.text = shopInfo[position].titile
+        holder.rowTitle.text = shopInfo[position].title
         holder.rowBody.text = shopInfo[position].body
     }
 
