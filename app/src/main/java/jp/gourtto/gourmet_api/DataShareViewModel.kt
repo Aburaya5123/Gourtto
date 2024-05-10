@@ -10,7 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import jp.gourtto.BuildConfig
+import jp.gourtto.BuildConfig.RECRUIT_API_KEY
 import jp.gourtto.MainActivity
 import jp.gourtto.R
 import jp.gourtto.fragments.PermissionsRequestFragment
@@ -172,7 +172,7 @@ class DataShareViewModel: ViewModel() {
      */
     fun getSearchResults(listener: GourmetApiRequestListener, params:MutableMap<String, String>,
                          activity: Activity, fragmentManager: FragmentManager){
-        params["key"] = BuildConfig.RECRUIT_API_KEY
+        params["key"] = RECRUIT_API_KEY
         params["format"] = "json"
         params["lat"] = targetLocation.latitude.toString()
         params["lng"] = targetLocation.longitude.toString()

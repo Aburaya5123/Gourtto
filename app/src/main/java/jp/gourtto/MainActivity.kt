@@ -16,7 +16,6 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.fragment.NavHostFragment
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -36,7 +35,7 @@ import com.google.android.libraries.places.api.Places
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import jp.gourtto.BuildConfig.PLACE_API_KEY
+import jp.gourtto.BuildConfig.GOOGLE_API_KEY
 import jp.gourtto.databinding.ActivityMainBinding
 import jp.gourtto.fragments.PermissionsRequestFragment
 import jp.gourtto.fragments.PermissionsRequestFragment.Companion.isReadyForLocationServices
@@ -138,7 +137,7 @@ class MainActivity : AppCompatActivity(), PermissionsRequestFragment.PermissionR
     // MapでAutoComplete機能を使用するためPlaceSdkを使用
     private fun initPlaceSdk(){
         if (Places.isInitialized().not()){
-            Places.initialize(applicationContext, PLACE_API_KEY, Locale.JAPAN)
+            Places.initialize(applicationContext, GOOGLE_API_KEY, Locale.JAPAN)
         }
     }
 

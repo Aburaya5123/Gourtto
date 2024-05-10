@@ -26,7 +26,7 @@ import com.bumptech.glide.request.target.Target
 import com.google.android.gms.maps.OnStreetViewPanoramaReadyCallback
 import com.google.android.gms.maps.StreetViewPanorama
 import com.google.android.gms.maps.SupportStreetViewPanoramaFragment
-import jp.gourtto.BuildConfig.PLACE_API_KEY
+import jp.gourtto.BuildConfig.GOOGLE_API_KEY
 import jp.gourtto.R
 import jp.gourtto.databinding.FragmentShopDetailBinding
 import jp.gourtto.google_api.PlaceDetailsRequest
@@ -191,7 +191,7 @@ class ShopDetailFragment : Fragment(), OnStreetViewPanoramaReadyCallback,
     private fun getPlaceId(info: Shop){
         val requestUrl: String =
             "${PLACE_ID_REQUEST}json?" +
-                    "key=${PLACE_API_KEY}" +
+                    "key=${GOOGLE_API_KEY}" +
                     "&fields=place_id" +
                     "&language=ja" +
                     "&input=${info.name} ${info.address}" +
@@ -205,7 +205,7 @@ class ShopDetailFragment : Fragment(), OnStreetViewPanoramaReadyCallback,
     private fun getGoogleShopDetail(placeId: String){
         val requestUrl: String =
             "${PLACE_DETAILS_REQUEST}json?" +
-                    "key=${PLACE_API_KEY}" +
+                    "key=${GOOGLE_API_KEY}" +
                     "&fields=formatted_phone_number,rating,reviews,photos" +
                     "&language=ja" +
                     "&place_id=${placeId}"
@@ -218,7 +218,7 @@ class ShopDetailFragment : Fragment(), OnStreetViewPanoramaReadyCallback,
     private fun getStreetViewMeta(shopInfo: Shop){
         val requestUrl: String =
             STREET_VIEW_META_REQUEST +
-                    "key=${PLACE_API_KEY}" +
+                    "key=${GOOGLE_API_KEY}" +
                     "&location=${shopInfo.address} ${shopInfo.name}"
         viewModel.getStreetViewMeta(requestUrl, this, requireActivity(), parentFragmentManager)
     }
@@ -227,7 +227,7 @@ class ShopDetailFragment : Fragment(), OnStreetViewPanoramaReadyCallback,
     private fun getPlacePhotoUrl(ref: String): String{
         return PLACE_PHOTO_REQUEST +
                     "photo_reference=${ref}" +
-                    "&key=${PLACE_API_KEY}" +
+                    "&key=${GOOGLE_API_KEY}" +
                     "&maxheight=${MAX_HEIGHT_PX}"
                     //"&maxwidth=${MAX_WIDTH_PX}"
     }

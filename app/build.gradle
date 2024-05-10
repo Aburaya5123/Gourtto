@@ -20,16 +20,21 @@ android {
     }
 
     buildTypes {
+        def propertiesFile = project.rootProject.file("local.properties")
+        def properties = new Properties()
+        properties.load(new FileInputStream(propertiesFile))
+
+
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 
-            buildConfigField("String", "RECRUIT_API_KEY", RECRUIT_API_KEY)
-            buildConfigField("String", "PLACE_API_KEY", PLACE_API_KEY)
+            buildConfigField "String", "RECRUIT_API_KEY", "\"${properties['RECRUIT_API_KEY']}\""
+            buildConfigField "String", "GOOGLE_API_KEY", "\"${properties['GOOGLE_API_KEY']}\""
         }
         debug {
-            buildConfigField("String", "RECRUIT_API_KEY", RECRUIT_API_KEY)
-            buildConfigField("String", "PLACE_API_KEY", PLACE_API_KEY)
+            buildConfigField "String", "RECRUIT_API_KEY", "\"${properties['RECRUIT_API_KEY']}\""
+            buildConfigField "String", "GOOGLE_API_KEY", "\"${properties['GOOGLE_API_KEY']}\""
         }
     }
     compileOptions {
